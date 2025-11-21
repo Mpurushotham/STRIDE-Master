@@ -8,6 +8,8 @@ const STRIDE_CATEGORY = {
     E: "Elevation of Privilege"
 };
 
+const PHASES = ['definition', 'analysis', 'mitigation', 'reporting'];
+
 const THREATS = [
     {
         id: 'S-1',
