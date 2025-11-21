@@ -264,12 +264,18 @@ class ThreatModelerApp {
         const activeThreat = this.activeCategory ? 
             this.threats.find(t => t.category === this.activeCategory) || null : null;
 
+        console.log('Rendering analysis phase, active category:', this.activeCategory);
+        console.log('Active threat:', activeThreat);
+        console.log('All threats:', this.threats);
+
         return `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="col-span-1 space-y-2">
                     <p class="text-sm text-slate-400 mb-2">Select a STRIDE category to analyze:</p>
                     ${Object.values(STRIDE_CATEGORY).map(cat => {
-                        const t = this.threats.find(x => x.category === cat);
+                        console.log('Processing category:', cat);
+                        const threat = this.threats.find(x => x.category === cat);
+                        console.log('Found threat for category:', cat, threat);
                         return `
                             <button
                                 onclick="app.setActiveCategory('${cat}')"
@@ -282,14 +288,14 @@ class ThreatModelerApp {
                                 <div class="flex justify-between items-center">
                                     <span class="font-bold">${cat}</span>
                                     <span class="text-xs px-2 py-0.5 rounded ${
-                                        t?.impact === 'High' ? 'bg-red-500/20 text-red-400' : 
-                                        t?.impact === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : 
+                                        threat && threat.impact === 'High' ? 'bg-red-500/20 text-red-400' : 
+                                        threat && threat.impact === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : 
                                         'bg-green-500/20 text-green-400'
                                     }">
-                                        ${t?.impact}
+                                        ${threat ? threat.impact : 'Unknown'}
                                     </span>
                                 </div>
-                                <div class="text-xs mt-1 opacity-70 truncate">${t?.title}</div>
+                                <div class="text-xs mt-1 opacity-70 truncate">${threat ? threat.title : 'No threat found'}</div>
                             </button>
                         `;
                     }).join('')}
@@ -528,43 +534,48 @@ class ThreatModelerApp {
         const totalThreats = this.threats.length;
         const securityScore = Math.round((mitigatedCount / totalThreats) * 100);
 
+        console.log('Rendering mitigation phase, threats:', this.threats);
+
         return `
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <h3 class="text-lg font-bold text-white">Vulnerability Checklist</h3>
                     <p class="text-sm text-slate-400">Review recommendations and apply controls to secure the architecture.</p>
                     <div class="space-y-3 h-[400px] overflow-y-auto pr-2">
-                        ${this.threats.map(t => `
-                            <div class="p-4 rounded-lg border transition-all ${
-                                t.mitigated 
-                                    ? 'bg-emerald-900/20 border-emerald-500/50' 
-                                    : 'bg-slate-800 border-slate-700 hover:border-slate-500'
-                            }">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-sm ${
-                                                t.mitigated ? 'text-emerald-400' : 'text-white'
-                                            }">
-                                                ${t.id}: ${t.title}
-                                            </span>
-                                            ${t.mitigated ? '<span class="text-xs bg-emerald-500 text-slate-900 px-1.5 rounded font-bold">FIXED</span>' : ''}
+                        ${this.threats.map(t => {
+                            console.log('Rendering threat:', t);
+                            return `
+                                <div class="p-4 rounded-lg border transition-all ${
+                                    t.mitigated 
+                                        ? 'bg-emerald-900/20 border-emerald-500/50' 
+                                        : 'bg-slate-800 border-slate-700 hover:border-slate-500'
+                                }">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-sm ${
+                                                    t.mitigated ? 'text-emerald-400' : 'text-white'
+                                                }">
+                                                    ${t.id}: ${t.title}
+                                                </span>
+                                                ${t.mitigated ? '<span class="text-xs bg-emerald-500 text-slate-900 px-1.5 rounded font-bold">FIXED</span>' : ''}
+                                            </div>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">${t.mitigation}</p>
                                         </div>
-                                        <p class="text-xs text-slate-400 mt-1 line-clamp-2">${t.mitigation}</p>
+                                        <button
+                                            onclick="app.toggleMitigation('${t.id}')"
+                                            class="px-3 py-1.5 text-xs font-bold rounded transition-colors ${
+                                                t.mitigated
+                                                    ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                                    : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                            }"
+                                        >
+                                            ${t.mitigated ? 'Undo' : 'Apply Fix'}
+                                        </button>
                                     </div>
-                                    <button
-                                        onclick="app.toggleMitigation('${t.id}')"
-                                        class="px-3 py-1.5 text-xs font-bold rounded transition-colors ${
-                                            t.mitigated
-                                                ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                                : 'bg-emerald-600 text-white hover:bg-emerald-500'
-                                        }"
-                                    >
-                                        ${t.mitigated ? 'Undo' : 'Apply Fix'}
-                                    </button>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 flex flex-col justify-center items-center text-center">
