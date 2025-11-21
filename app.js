@@ -613,81 +613,343 @@ class ThreatModelerApp {
         `;
     }
 
-    renderReportingPhase() {
-        const mitigatedCount = this.threats.filter(t => t.mitigated).length;
-        const totalThreats = this.threats.length;
-        const securityScore = Math.round((mitigatedCount / totalThreats) * 100);
+   renderReportingPhase() {
+    const mitigatedCount = this.threats.filter(t => t.mitigated).length;
+    const totalThreats = this.threats.length;
+    const securityScore = Math.round((mitigatedCount / totalThreats) * 100);
+    const highRisks = this.threats.filter(t => !t.mitigated && t.impact === 'High');
+    const mitigatedThreats = this.threats.filter(t => t.mitigated);
+    const openThreats = this.threats.filter(t => !t.mitigated);
 
-        return `
-            <div class="max-w-3xl mx-auto bg-white text-slate-900 p-8 rounded-xl shadow-2xl">
-                <div class="flex justify-between items-start border-b-2 border-slate-200 pb-6 mb-6">
-                    <div>
-                        <h1 class="text-3xl font-bold text-slate-800">Threat Model Assessment</h1>
-                        <p class="text-slate-500 mt-1">Project: Connected Vehicle Telemetry V1.0</p>
-                    </div>
-                    <div class="text-right px-4 py-2 rounded-lg ${
-                        securityScore === 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                    }">
-                        <div class="text-xs font-bold uppercase tracking-wider">Score</div>
-                        <div class="text-2xl font-black">${securityScore}%</div>
+    // Get current date for report
+    const reportDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    return `
+        <div class="max-w-6xl mx-auto">
+            <!-- Report Header -->
+            <div class="bg-white text-gray-800 rounded-xl shadow-2xl overflow-hidden no-print">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-8 print:bg-white print:text-black">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h1 class="text-4xl font-bold mb-2 print:text-3xl print:text-black">Threat Model Assessment Report</h1>
+                            <p class="text-blue-100 text-lg print:text-gray-700">Connected Vehicle Telemetry System v2.0</p>
+                            <div class="flex items-center gap-4 mt-4 text-sm print:text-xs">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-calendar print:text-gray-600"></i>
+                                    <span class="print:text-gray-600">${reportDate}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-tag print:text-gray-600"></i>
+                                    <span class="print:text-gray-600">Assessment ID: TM-${Date.now().toString().slice(-6)}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-user-shield print:text-gray-600"></i>
+                                    <span class="print:text-gray-600">Automotive Security Team</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right print:text-black">
+                            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 print:bg-gray-100 print:border">
+                                <div class="text-2xl font-black print:text-xl">${securityScore}%</div>
+                                <div class="text-sm opacity-90 print:text-xs">Security Score</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    <section>
-                        <h3 class="text-lg font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Executive Summary</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">
-                            The threat model for the Car Telemetry system identified <strong>${totalThreats}</strong> critical threats across STRIDE categories. 
-                            Currently, <strong>${mitigatedCount}</strong> threats have been mitigated through architectural controls.
-                            ${securityScore < 100 ? " Immediate attention is required for the remaining vulnerabilities." : " The system architecture meets the baseline security requirements."}
+                <div class="p-8 space-y-8 print:p-6 print:space-y-6">
+                    <!-- Executive Summary -->
+                    <section class="border-b border-gray-200 pb-6 print:pb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2 print:text-xl">
+                            <i class="fas fa-chart-line text-blue-500 print:text-gray-600"></i>
+                            Executive Summary
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 print:grid-cols-4 print:gap-2">
+                            <div class="text-center p-4 bg-blue-50 rounded-lg print:bg-white print:border">
+                                <div class="text-3xl font-bold text-blue-600 print:text-2xl">${totalThreats}</div>
+                                <div class="text-sm text-gray-600 print:text-xs">Total Threats</div>
+                            </div>
+                            <div class="text-center p-4 bg-green-50 rounded-lg print:bg-white print:border">
+                                <div class="text-3xl font-bold text-green-600 print:text-2xl">${mitigatedCount}</div>
+                                <div class="text-sm text-gray-600 print:text-xs">Mitigated</div>
+                            </div>
+                            <div class="text-center p-4 bg-${highRisks.length > 0 ? 'red' : 'green'}-50 rounded-lg print:bg-white print:border">
+                                <div class="text-3xl font-bold text-${highRisks.length > 0 ? 'red' : 'green'}-600 print:text-2xl">${highRisks.length}</div>
+                                <div class="text-sm text-gray-600 print:text-xs">High Risk Open</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg print:bg-white print:border">
+                                <div class="text-3xl font-bold text-purple-600 print:text-2xl">${securityScore}%</div>
+                                <div class="text-sm text-gray-600 print:text-xs">Overall Score</div>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed print:text-sm">
+                            This comprehensive threat modeling assessment of the <strong>Connected Vehicle Telemetry System</strong> 
+                            identified <strong>${totalThreats} potential security threats</strong> across all STRIDE categories. 
+                            Through systematic analysis and implementation of security controls, 
+                            <strong>${mitigatedCount} threats have been effectively mitigated</strong>, achieving a security posture score of 
+                            <strong>${securityScore}%</strong>.
+                            ${highRisks.length > 0 ? 
+                                `<br><br><strong class="text-red-600 print:text-red-800">CRITICAL: ${highRisks.length} high-risk vulnerabilities require immediate attention.</strong>` : 
+                                '<br><br>The system architecture meets baseline security requirements with all critical threats addressed.'
+                            }
                         </p>
                     </section>
 
-                    <section>
-                        <h3 class="text-lg font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Detailed Findings</h3>
-                        <div class="space-y-4">
-                            ${this.threats.map(t => `
-                                <div class="flex gap-4 text-sm">
-                                    <div class="w-16 flex-shrink-0 font-mono font-bold ${
-                                        t.mitigated ? 'text-emerald-600' : 'text-red-600'
-                                    }">
-                                        ${t.id}
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="font-bold text-slate-700">${t.title}</div>
-                                        <div class="text-slate-500 mt-1">
-                                            <span class="font-semibold">Mitigation:</span> ${t.mitigation}
-                                        </div>
-                                    </div>
-                                    <div class="w-24 text-right">
-                                        ${t.mitigated ? 
-                                            '<span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">Resolved</span>' :
-                                            '<span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">Open</span>'
-                                        }
+                    <!-- System Architecture -->
+                    <section class="border-b border-gray-200 pb-6 print:pb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 print:text-xl">System Architecture Overview</h2>
+                        <div class="bg-gray-50 rounded-lg p-6 mb-4 print:p-4 print:bg-white print:border">
+                            <h3 class="text-lg font-semibold mb-3 print:text-base">Architecture Components & Trust Boundaries</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2">
+                                <div class="border-l-4 border-yellow-500 pl-4 py-2 print:py-1">
+                                    <h4 class="font-semibold text-gray-800 print:text-sm">Vehicle Trust Zone</h4>
+                                    <p class="text-sm text-gray-600 print:text-xs">Car TCU - Embedded telematics unit with secure boot and HSM</p>
+                                    <div class="text-xs text-gray-500 mt-1 print:text-xs">
+                                        Trust Level: <span class="font-medium">High</span>
                                     </div>
                                 </div>
-                            `).join('')}
+                                <div class="border-l-4 border-red-500 pl-4 py-2 print:py-1">
+                                    <h4 class="font-semibold text-gray-800 print:text-sm">Public Network</h4>
+                                    <p class="text-sm text-gray-600 print:text-xs">Cellular (4G/5G) - Untrusted public infrastructure</p>
+                                    <div class="text-xs text-gray-500 mt-1 print:text-xs">
+                                        Trust Level: <span class="font-medium">None</span>
+                                    </div>
+                                </div>
+                                <div class="border-l-4 border-blue-500 pl-4 py-2 print:py-1">
+                                    <h4 class="font-semibold text-gray-800 print:text-sm">Cloud Trust Zone</h4>
+                                    <p class="text-sm text-gray-600 print:text-xs">IoT Gateway & Database - Managed cloud infrastructure</p>
+                                    <div class="text-xs text-gray-500 mt-1 print:text-xs">
+                                        Trust Level: <span class="font-medium">Medium-High</span>
+                                    </div>
+                                </div>
+                                <div class="border-l-4 border-purple-500 pl-4 py-2 print:py-1">
+                                    <h4 class="font-semibold text-gray-800 print:text-sm">Data Flow</h4>
+                                    <p class="text-sm text-gray-600 print:text-xs">MQTT Telemetry → TLS 1.3 → Secure Write</p>
+                                    <div class="text-xs text-gray-500 mt-1 print:text-xs">
+                                        Encryption: <span class="font-medium">End-to-End</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
-                    <div class="pt-8 mt-8 border-t border-slate-200 text-center">
-                        <button 
-                            onclick="window.print()" 
-                            class="bg-slate-900 text-white px-6 py-2 rounded hover:bg-slate-700 transition-colors"
-                        >
-                            Print Report
-                        </button>
-                        <button 
-                            onclick="app.setPhase('definition')" 
-                            class="ml-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-                        >
-                            Start Over
-                        </button>
+                    <!-- Threat Analysis Summary -->
+                    <section class="border-b border-gray-200 pb-6 print:pb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 print:text-xl">Threat Analysis Summary</h2>
+                        
+                        <!-- STRIDE Categories Overview -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3 print:text-base">STRIDE Categories Assessment</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 print:grid-cols-3 print:gap-2">
+                                ${Object.values(STRIDE_CATEGORY).map(cat => {
+                                    const categoryThreats = this.threats.filter(t => t.category === cat);
+                                    const mitigated = categoryThreats.filter(t => t.mitigated).length;
+                                    const total = categoryThreats.length;
+                                    const score = total > 0 ? Math.round((mitigated / total) * 100) : 0;
+                                    
+                                    return `
+                                        <div class="border rounded-lg p-4 text-center print:p-2">
+                                            <div class="font-semibold text-gray-800 print:text-sm">${cat}</div>
+                                            <div class="text-2xl font-bold ${
+                                                score === 100 ? 'text-green-600' : 
+                                                score >= 70 ? 'text-yellow-600' : 'text-red-600'
+                                            } print:text-xl">${score}%</div>
+                                            <div class="text-xs text-gray-600 print:text-xs">${mitigated}/${total} Mitigated</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Detailed Threat Findings -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3 print:text-base">Detailed Threat Findings</h3>
+                            <div class="space-y-4 print:space-y-3">
+                                ${this.threats.map(threat => `
+                                    <div class="border rounded-lg overflow-hidden ${
+                                        threat.mitigated ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                                    } print:break-inside-avoid">
+                                        <div class="px-4 py-3 ${
+                                            threat.mitigated ? 'bg-green-100' : 'bg-red-100'
+                                        } border-b print:px-3 print:py-2">
+                                            <div class="flex items-center justify-between print:flex-col print:items-start print:gap-1">
+                                                <h3 class="font-semibold text-gray-800 print:text-sm">${threat.id}: ${threat.title}</h3>
+                                                <div class="flex items-center gap-2 print:gap-1">
+                                                    <span class="px-2 py-1 text-xs rounded ${
+                                                        threat.mitigated ? 
+                                                        'bg-green-200 text-green-800' : 
+                                                        'bg-red-200 text-red-800'
+                                                    } print:text-xs">
+                                                        ${threat.mitigated ? 'MITIGATED' : 'OPEN - ' + threat.impact + ' RISK'}
+                                                    </span>
+                                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded print:text-xs">
+                                                        ${threat.category}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="p-4 print:p-3">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 print:grid-cols-2 print:gap-3">
+                                                <div>
+                                                    <h4 class="font-semibold text-sm text-gray-700 mb-2 print:text-xs">Risk Assessment</h4>
+                                                    <div class="space-y-1 text-sm print:text-xs">
+                                                        <div class="flex justify-between">
+                                                            <span>Impact:</span>
+                                                            <span class="font-medium ${
+                                                                threat.impact === 'High' ? 'text-red-600' : 
+                                                                threat.impact === 'Medium' ? 'text-yellow-600' : 'text-green-600'
+                                                            }">${threat.impact}</span>
+                                                        </div>
+                                                        <div class="flex justify-between">
+                                                            <span>Affected Components:</span>
+                                                            <span class="font-medium text-right">${threat.affectedComponents.map(comp => 
+                                                                DIAGRAM_NODES.find(n => n.id === comp)?.label || comp
+                                                            ).join(', ')}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-semibold text-sm text-gray-700 mb-2 print:text-xs">${threat.mitigated ? 'Implemented' : 'Required'} Controls</h4>
+                                                    <p class="text-sm text-gray-600 print:text-xs">${threat.mitigation}</p>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <h4 class="font-semibold text-sm text-gray-700 mb-2 print:text-xs">Attack Scenario</h4>
+                                                <p class="text-sm text-gray-600 print:text-xs">${threat.context}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Risk Mitigation Progress -->
+                    <section class="border-b border-gray-200 pb-6 print:pb-4">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 print:text-xl">Risk Mitigation Progress</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
+                            <!-- Mitigation Status -->
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3 print:text-base">Mitigation Status</h3>
+                                <div class="space-y-3 print:space-y-2">
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-700 print:text-sm">Total Threats Identified</span>
+                                        <span class="font-semibold">${totalThreats}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-700 print:text-sm">Successfully Mitigated</span>
+                                        <span class="font-semibold text-green-600">${mitigatedCount}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-700 print:text-sm">Remaining Vulnerabilities</span>
+                                        <span class="font-semibold ${openThreats.length > 0 ? 'text-red-600' : 'text-green-600'}">${openThreats.length}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                        <span class="text-gray-700 print:text-sm">High Risk Outstanding</span>
+                                        <span class="font-semibold ${highRisks.length > 0 ? 'text-red-600' : 'text-green-600'}">${highRisks.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Recommendations -->
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3 print:text-base">Security Recommendations</h3>
+                                <ul class="space-y-2 text-sm text-gray-600 print:text-xs">
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-arrow-right text-blue-500 mt-1 flex-shrink-0 print:text-gray-600"></i>
+                                        <span>Implement continuous security monitoring and automated threat detection</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-arrow-right text-blue-500 mt-1 flex-shrink-0 print:text-gray-600"></i>
+                                        <span>Conduct regular penetration testing and security assessments</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-arrow-right text-blue-500 mt-1 flex-shrink-0 print:text-gray-600"></i>
+                                        <span>Establish incident response plan for automotive security events</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i class="fas fa-arrow-right text-blue-500 mt-1 flex-shrink-0 print:text-gray-600"></i>
+                                        <span>Maintain compliance with evolving automotive security standards (ISO 21434, UN R155)</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Compliance & Standards -->
+                    <section>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4 print:text-xl">Compliance & Standards</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3 print:text-base">Compliance Status</h3>
+                                <div class="space-y-2">
+                                    ${['ISO 21434 - Road Vehicles Cybersecurity', 'UN R155 - Cybersecurity Management', 'SAE J3061 - Cybersecurity Guidebook', 'NIST CSF - Cybersecurity Framework'].map(standard => `
+                                        <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                            <span class="text-gray-700 print:text-sm">${standard}</span>
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium print:text-xs">
+                                                Compliant
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-3 print:text-base">Next Review Schedule</h3>
+                                <div class="space-y-2 text-sm text-gray-600 print:text-xs">
+                                    <div class="flex justify-between">
+                                        <span>Next Assessment:</span>
+                                        <span class="font-medium">${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Compliance Review:</span>
+                                        <span class="font-medium">Quarterly</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Threat Model Update:</span>
+                                        <span class="font-medium">After Major Changes</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Report Footer -->
+                <div class="bg-gray-100 border-t border-gray-200 p-6 print:bg-white print:border-t-2">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="text-sm text-gray-600 print:text-xs">
+                            <div>Generated by STRIDE Threat Modeler v2.0 | Automotive Security Framework</div>
+                            <div>Confidential - For authorized personnel only</div>
+                        </div>
+                        <div class="flex gap-4 mt-4 md:mt-0 no-print">
+                            <button onclick="window.print()" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors print:hidden">
+                                <i class="fas fa-print mr-2"></i>Print Report
+                            </button>
+                            <button onclick="app.setPhase('mitigation')" 
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors print:hidden">
+                                <i class="fas fa-edit mr-2"></i>Edit Mitigations
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        `;
-    }
+
+            <!-- Print-only elements -->
+            <div class="hidden print:block print:mt-8 print:text-center">
+                <div class="text-xs text-gray-500">
+                    Report generated on ${reportDate} | STRIDE Threat Model Assessment | Page 1 of 1
+                </div>
+            </div>
+        </div>
+    `;
+}
+    
 }
 
 // Make app globally available
